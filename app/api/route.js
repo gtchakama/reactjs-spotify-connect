@@ -12,6 +12,7 @@ const NOW_PLAYING_ENDPOINT = `https://api.spotify.com/v1/me/player/currently-pla
 const RECENTLY_PLAYED_ENDPOINT = `https://api.spotify.com/v1/me/player/recently-played?limit=10`;
 const TOP_ARTISTS_ENDPOINT = `https://api.spotify.com/v1/me/top/artists?limit=5`;
 const TOKEN_ENDPOINT = `https://accounts.spotify.com/api/token`;
+const TOP_TRACKS_ENDPOINT = `https://api.spotify.com/v1/me/top/tracks?time_range=long_term&limit=5`;
 
 const getAccessToken = async () => {
   const res = await fetch(TOKEN_ENDPOINT, {
@@ -44,6 +45,7 @@ const getNowPlaying = async () => {
   }
 
   const data = await res.json();
+  console.log("data",token);
   return data;
 };
 
@@ -81,6 +83,24 @@ const getTopArtists = async () => {
   const data = await res.json();
   return data.items;
 };
+
+const getTopTracks = async () => {
+  const access_token = await getAccessToken();
+
+  const res = await fetch(TOP_TRACKS_ENDPOINT, {
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+    },
+  });
+
+  if (res.status === 204 || res.status > 400) {
+    return null;
+  }
+
+  const data = await res.json();
+  return data.items;
+};
+
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -143,14 +163,29 @@ export async function GET(request) {
     return NextResponse.json({ artists }, { status: 200 });
   }
 
+  if (type === 'top-tracks') {
+    const response = await getTopTracks();
+
+    if (!response) {
+      return NextResponse.json({ tracks: [] }, { status: 200 });
+    }
+
+    const tracks = response.map(track => ({
+      id: track.id,
+      name: track.name,
+      artists: track.artists,
+      album: track.album,
+      explicit: track.explicit,
+      url: track.external_urls.spotify,
+    }));
+
+    return NextResponse.json({ tracks }, { status: 200 });
+  }
+
   return NextResponse.json({ message: 'Invalid type parameter' }, { status: 400 });
 }
 
-// Example POST request handler (if needed)
-export async function POST(request) {
-  // Do whatever you want
-  return NextResponse.json({ message: 'Hello World' }, { status: 200 });
-}
+
 
 
 
