@@ -2,45 +2,31 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const TopArtists = () => {
-  const [artists, setArtists] = useState([
-    {
-      name: 'Taylor Swift',
-      genres: 'Pop, Country, Folk',
-      imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb1f90bb8c012faa3ff3dd7d7c',
-      spotifyUrl: 'https://open.spotify.com/artist/06HL4z0CvFAxyc27GXpf02',
-    },
-    {
-      name: 'Drake',
-      genres: 'Hip-hop, R&B, Pop',
-      imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb7b1d6476b5b6d196d34e49e6',
-      spotifyUrl: 'https://open.spotify.com/artist/3TVXtAsR1Inumwj472S9r4',
-    },
-    {
-      name: 'Daft Punk',
-      genres: 'Electronic, Dance',
-      imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb493cb1cbad64f4a6dbac46e4',
-      spotifyUrl: 'https://open.spotify.com/artist/4tZwfgrHOc3mvqYlEYSvVi',
-    },
-    {
-      name: 'Ludovico Einaudi',
-      genres: 'Classical, Instrumental',
-      imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb7a0a5a6e5f92d23e5f1c84b1',
-      spotifyUrl: 'https://open.spotify.com/artist/2uFUBdaVGtyMqckSeCl0Qj',
-    },
-    {
-      name: 'Bob Marley',
-      genres: 'Reggae, Ska',
-      imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb45cd1e40b7fd49c1ac485b15',
-      spotifyUrl: 'https://open.spotify.com/artist/2QsynagSdAqZj3U9HgDzjD',
-    },
-  ]);
+
+  const [tracks, setTracks] = useState([]
+  );
+
+  const token = 'BQAIO33IrwhUA-GoE4D_PXypvpkWZU2KxIO_ow-QCSDSFgiWstApXQ-pvOAfPM-KYIlcP47w-z2VI8_a269-9FkCzv5kbXSRP9UAlvv41pbcDWgy7vxYHuGzD-TEO0wwpvB34arVcVWdoXVDOD-mz4JbPNfYt5nScjx7QIuuCBeNLe52J_PREcxbVm8Iujyj1MM8u5WKQeAmO9xoEmpz4l2OBh2p5IUDlbloJ4iyxsLdLkrweF9nPi8JudCMgiX7fvIjduwd6IfeBHcC7xRDitpe';
 
 
   useEffect(() => {
     const fetchTopArtists = async () => {
       try {
-        const response = await axios.get('/api?type=top-artists');
-        response.data.artists.length > 0 && setArtists(response.data.artists);
+        const response = await fetch('https://api.spotify.com/v1/me/top/tracks?time_range=long_term&limit=5', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log('response', response.data);
+        const filteredTracks = response.data.items.map((track) => ({
+          name: track.name,
+          artists: track.artists,
+          album: track.album,
+          explicit: track.explicit,
+          url: track.external_urls.spotify,
+        }));
+        setTracks(filteredTracks);
+
       } catch (error) {
         console.error('Error fetching top artists:', error);
       }
@@ -49,39 +35,38 @@ const TopArtists = () => {
     fetchTopArtists();
   }, []);
 
-
   function classNames(...classes) {
     return classes.filter(Boolean).join(' ')
   }
 
-
   return (
     <div className='p-12'>
-      <h2 className='text-4xl pb-8 font-semibold text-white'>Top Artists</h2>
+      <h2 className='text-4xl pb-8 font-semibold text-white'>Top Tracks</h2>
       <div>
-      <ul role="list" className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-5">
-        {artists.map((artist, index) => (
-          <li key={index} className="col-span-1 flex rounded-md shadow-sm">
-            <div
-              className={classNames(
-                'bg-yellow-500 flex w-16 flex-shrink-0 items-center justify-center rounded-l-md text-sm font-medium text-white'
-              )}
-            >
-              GT
-            </div>
-            <div className="flex flex-1 items-center justify-between truncate rounded-r-md border-b border-r border-t border-gray-200 bg-white">
-              <div className="flex-1 truncate px-4 py-2 text-sm">
-                <a href={artist.spotifyUrl} className="font-medium text-gray-900 hover:text-gray-600">
-                {artist.name}
-                </a>
-                <p className="text-gray-500">{index + 2 + Math.random().toFixed(0) } Songs</p>
-              </div>
 
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
+
+        <h2 className='text-4xl pt-8 pb-8 font-semibold text-white'>Top Tracks</h2>
+
+
+        <ul>
+          <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
+            {tracks.map((track) => (
+              <a href={track.url} className="group">
+                <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200 xl:aspect-h-8 xl:aspect-w-7">
+                  <img
+                    src={track.album.images[0].url}
+                    alt="Album cover"
+                    className="h-full w-full object-cover object-center group-hover:opacity-75"
+                  />
+                </div>
+                <h3 className="mt-4 text-2xl text-gray-100">{track.name}</h3>
+                <p className="text-gray-500">{track.artists[0].name}</p>
+                <p className="text-lg font-medium text-gray-100">{track.album.name}</p>
+              </a>
+            ))}
+          </div>
+        </ul>
+      </div>
     </div>
   );
 };
